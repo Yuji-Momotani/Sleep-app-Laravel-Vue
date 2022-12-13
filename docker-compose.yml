@@ -10,7 +10,7 @@ services:
       target: ${APP_BUILD_TARGET:-development}
     volumes:
       - type: bind
-        source: ./src
+        source: ./backend
         target: /workspace
       - type: volume
         source: psysh-store
@@ -42,29 +42,49 @@ services:
         mode: host
     volumes:
       - type: bind
-        source: ./src
+        source: ./backend
         target: /workspace
 
-  db:
-    build:
-      context: .
-      dockerfile: ./infra/docker/mysql/Dockerfile
-    ports:
-      - target: 3306
-        published: ${DB_PUBLISHED_PORT:-3306}
-        protocol: tcp
-        mode: host
+  # db:
+  #   build:
+  #     context: .
+  #     dockerfile: ./infra/docker/mysql/Dockerfile
+  #   ports:
+  #     - target: 3306
+  #       published: ${DB_PUBLISHED_PORT:-3306}
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - type: volume
+  #       source: db-store
+  #       target: /var/lib/mysql
+  #       volume:
+  #         nocopy: true
+  #   environment:
+  #     MYSQL_DATABASE: app
+  #     MYSQL_USER: appuser
+  #     MYSQL_PASSWORD: root
+  #     MYSQL_ROOT_PASSWORD: root
+  #     TZ: "Asia/Tokyo"
+  #     # - MYSQL_DATABASE=${DB_DATABASE:-laravel}
+  #     # - MYSQL_USER=${DB_USERNAME:-phper}
+  #     # - MYSQL_PASSWORD=${DB_PASSWORD:-secret}
+  #     # - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-secret}
+  mysql:
+    image: mysql:8.0.18
+    container_name: "db"
     volumes:
-      - type: volume
-        source: db-store
-        target: /var/lib/mysql
-        volume:
-          nocopy: true
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d
+      - ./docker/mysql/data:/var/lib/mysql
+    ports:
+      - 13306:3306
     environment:
-      - MYSQL_DATABASE=${DB_DATABASE:-laravel}
-      - MYSQL_USER=${DB_USERNAME:-phper}
-      - MYSQL_PASSWORD=${DB_PASSWORD:-secret}
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-secret}
+      MYSQL_DATABASE: app
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+      TZ: "Asia/Tokyo"
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 
   mailhog:
     image: mailhog/mailhog

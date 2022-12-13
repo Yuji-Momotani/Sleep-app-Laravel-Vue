@@ -1,3 +1,7 @@
 .idea
 .vscode
 .env
+
+.gitignore
+/public/app
+/resources/views/spa
